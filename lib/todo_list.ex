@@ -3,7 +3,7 @@ defmodule TodoList do
   A simples todo list.
   """
   defstruct auto_id: 1, entries: %{}
-  @type t :: %__MODULE__{}
+  @type t :: %TodoList{}
   @typep entry :: %{date: Date.t(), title: String.t()}
 
   @spec new([entry] | []) :: t()
@@ -52,29 +52,41 @@ defmodule TodoList do
 
   @spec update_entry(t(), {non_neg_integer(), :date | :title}, Date.t() | String.t()) :: t()
   @doc """
-  Update an entry with given `id` changing its `date` or `title`.
-  """
-  def update_entry(todo_list, {id, :date}, date) do
-    case Map.get(todo_list, id) do
-      :error -> todo_list
-      {:ok, entry} -> Map.put(todo_list, id, %{entry | date: date})
-    end
-  end
+  Update an entry with given `id` changing its `:date` or `:title` field with `new_data`
+  (assumed to be of the correct type).
 
-  def update_entry(todo_list, {id, :title}, title) do
-    case Map.get(todo_list, id) do
-      :error -> todo_list
-      {:ok, entry} -> Map.put(todo_list, id, %{entry | title: title})
+   ## Examples
+
+      iex> todos = TodoList.new() |> TodoList.add_entry(%{date: ~D[2022-12-01], title: "Clean the garden"})
+      iex> TodoList.update_entry(todos, {1, :date}, ~D[2022-12-10])
+      %TodoList{auto_id: 2,
+      entries: %{1 => %{date: ~D[2022-12-10], id: 1, title: "Clean the garden"}}}
+
+  """
+  def update_entry(todo_list, {id, field}, new_data) do
+    case Map.fetch(todo_list.entries, id) do
+      :error ->
+        todo_list
+
+      {:ok, entry} ->
+        %{todo_list | entries: Map.put(todo_list.entries, id, %{entry | field => new_data})}
     end
   end
 
   @spec delete_entry(t(), non_neg_integer()) :: t()
   @doc """
   Removes an entry from `todo_list` by its numerical `id`.
+
+  ## Examples
+
+      iex> todos = TodoList.new() |> TodoList.add_entry(%{date: ~D[2022-12-01], title: "Clean the garden"})
+      iex> TodoList.delete_entry(todos, 1)
+      %TodoList{auto_id: 2,
+      entries: %{}}
   """
   def delete_entry(todo_list, id) do
-    {_entry, todo_list} = Map.pop(todo_list, id)
-    todo_list
+    {_entry, entries} = Map.pop(todo_list.entries, id)
+    %{todo_list | entries: entries}
   end
 end
 
