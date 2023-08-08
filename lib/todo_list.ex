@@ -78,7 +78,17 @@ defmodule TodoList do
   end
 end
 
-def module(TodoList.CsvImporter) do
+defmodule TodoList.CsvImporter do
+  @moduledoc """
+  Import todo list from CSV file with `Date | Title` format.
+  """
+  @spec import!(String.t()) :: TodoList.t()
   def import!(path) do
+    path
+    |> File.stream!()
+    |> Stream.map(&String.trim/1)
+    |> Stream.map(&String.split(&1, ","))
+    |> Enum.map(fn [date, title] -> %{date: Date.from_iso8601!(date), title: title} end)
+    |> TodoList.new()
   end
 end
