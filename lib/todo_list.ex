@@ -6,11 +6,14 @@ defmodule TodoList do
   @type t :: %__MODULE__{}
   @typep entry :: %{date: Date.t(), title: String.t()}
 
-  @spec new() :: t()
+  @spec new([entry] | []) :: t()
   @doc """
   Generates an empty todo list
   """
-  def new(), do: %__MODULE__{}
+  def new(entries \\ []) do
+    entries
+    |> Enum.reduce(%TodoList{}, fn el, acc -> add_entry(acc, el) end)
+  end
 
   @spec add_entry(t(), entry()) :: t()
   @doc """
@@ -20,8 +23,9 @@ defmodule TodoList do
   ## Examples
 
       iex> todos = TodoList.new()
-      iex> TodoList.add_entry(todos, ~D[2022-12-01], "Clean the garden")
-      %{~D[2022-12-01] => ["Clean the garden"]}
+      iex> TodoList.add_entry(todos, %{date: ~D[2022-12-01], title: "Clean the garden"})
+      %TodoList{auto_id: 2,
+      entries: %{1 => %{date: ~D[2022-12-01], id: 1, title: "Clean the garden"}}}
 
   """
   def add_entry(todo_list, entry) do
@@ -30,19 +34,51 @@ defmodule TodoList do
     %TodoList{auto_id: todo_list.auto_id + 1, entries: new_entries}
   end
 
-  @spec entries(t(), Date.t()) :: [String.t()]
+  @spec entries(t(), Date.t()) :: [entry()]
   @doc """
   Retrieves all entries for a given `date` in `todo_list`.
 
   ## Examples
 
-      iex> todos = TodoList.new() |> TodoList.add_entry(~D[2022-01-01], "Shave")
+      iex> todos = TodoList.new() |> TodoList.add_entry(%{date: ~D[2022-01-01], title: "Shave"})
       iex> TodoList.entries(todos, ~D[2022-01-01])
-      ["Shave"]
+      [%{date: ~D[2022-01-01], id: 1, title: "Shave"}]
   """
   def entries(todo_list, date) do
     todo_list.entries
     |> Stream.filter(fn {_id, %{date: id_date}} -> date == id_date end)
     |> Enum.map(fn {_id, entry} -> entry end)
+  end
+
+  @spec update_entry(t(), {non_neg_integer(), :date | :title}, Date.t() | String.t()) :: t()
+  @doc """
+  Update an entry with given `id` changing its `date` or `title`.
+  """
+  def update_entry(todo_list, {id, :date}, date) do
+    case Map.get(todo_list, id) do
+      :error -> todo_list
+      {:ok, entry} -> Map.put(todo_list, id, %{entry | date: date})
+    end
+  end
+
+  def update_entry(todo_list, {id, :title}, title) do
+    case Map.get(todo_list, id) do
+      :error -> todo_list
+      {:ok, entry} -> Map.put(todo_list, id, %{entry | title: title})
+    end
+  end
+
+  @spec delete_entry(t(), non_neg_integer()) :: t()
+  @doc """
+  Removes an entry from `todo_list` by its numerical `id`.
+  """
+  def delete_entry(todo_list, id) do
+    {_entry, todo_list} = Map.pop(todo_list, id)
+    todo_list
+  end
+end
+
+def module(TodoList.CsvImporter) do
+  def import!(path) do
   end
 end
