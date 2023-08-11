@@ -35,20 +35,20 @@ defmodule TodoList.Server do
     listen(new_todo)
   end
 
-  def add_entry(server, entry) do
-    send(server, {:add, entry})
+  def add_entry(entry) do
+    send(:todo, {:add, entry})
   end
 
-  def remove_entry(server, id) do
-    send(server, {:remove, id})
+  def remove_entry(id) do
+    send(:todo, {:remove, id})
   end
 
-  def update_entry(server, id, field, new_data) do
-    send(server, {:update, id, field, new_data})
+  def update_entry(id, field, new_data) do
+    send(:todo, {:update, id, field, new_data})
   end
 
-  def retrieve(server, date) do
-    send(server, {:retrieve, self(), date})
+  def retrieve(date) do
+    send(:todo, {:retrieve, self(), date})
 
     receive do
       {:result, result} -> result
@@ -57,7 +57,7 @@ defmodule TodoList.Server do
     end
   end
 
-  def print(server) do
-    send(server, {:print})
+  def print() do
+    send(:todo, {:print})
   end
 end
