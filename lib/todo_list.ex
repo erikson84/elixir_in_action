@@ -88,14 +88,14 @@ defmodule TodoList do
     {_entry, entries} = Map.pop(todo_list.entries, id)
     %{todo_list | entries: entries}
   end
+end
 
-  defimpl String.Chars do
-    def to_string(todo_list) do
-      todo_list.entries
-      |> Stream.map(fn {_id, %{date: date, title: title}} -> "#{date}: #{title}\n" end)
-      |> Enum.sort()
-      |> Enum.reduce("# To-Do List\n\n", &(&2 <> &1))
-    end
+defimpl String.Chars, for: TodoList do
+  def to_string(todo_list) do
+    todo_list.entries
+    |> Stream.map(fn {_id, %{date: date, title: title}} -> "#{date}: #{title}\n" end)
+    |> Enum.sort()
+    |> Enum.reduce("# To-Do List\n\n", &(&2 <> &1))
   end
 end
 
