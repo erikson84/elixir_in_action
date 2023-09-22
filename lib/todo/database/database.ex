@@ -4,26 +4,30 @@ defmodule Todo.Database do
   @db_folder "./persist"
 
   def init(_) do
-    File.mkdir_p!(@db_folder)
-    {:ok, nil}
+    workers = 0..2
+    |> Enum.map(fn idx -> {:ok, worker} = Todo.Database.Worker.start(@db_folder)
+    {idx, worker} end)
+    |> Map.new()
+
+    {:ok, workers}
   end
 
-  def handle_cast({:store, key, data}, state) do
-    key
-    |> file_name()
-    |> File.write(:erlang.term_to_binary(data))
+  def handle_cast({:store, key, data}, workers) do
+    worker = get_worker(key, workers)
+    Todo.Database.Worker.store(worker, key, data)
 
-    {:noreply, state}
+    {:noreply, workers}
   end
 
-  def handle_call({:get, key}, _, state) do
-    data =
+  def handle_call({:get, key}, _, workers) do
+    worker = get_worker(key, workers)
+    data = Todo.Database.Worker.get(worker, key)
       case File.read(file_name(key)) do
         {:ok, contents} -> :erlang.binary_to_term(contents)
         _ -> nil
       end
 
-    {:reply, data, state}
+    {:reply, data, workers}
   end
 
   def start do
@@ -40,5 +44,9 @@ defmodule Todo.Database do
 
   defp file_name(key) do
     Path.join(@db_folder, to_string(key))
+  end
+
+  defp get_worker(key, workers) do
+    Map.get(workers, :erlang.phash2(key, 3))
   end
 end

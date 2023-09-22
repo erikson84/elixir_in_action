@@ -18,10 +18,10 @@ defmodule Todo.Cache do
   end
 
   def start do
-    GenServer.start(__MODULE__, nil)
+    GenServer.start(__MODULE__, nil, name: __MODULE__)
   end
 
-  def server_process(server, todo_list_name) do
-    GenServer.call(server, {:server_process, todo_list_name})
+  def server_process(todo_list_name) do
+    GenServer.call(__MODULE__, {:server_process, todo_list_name})
   end
 end

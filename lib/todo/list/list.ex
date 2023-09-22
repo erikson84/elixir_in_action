@@ -93,7 +93,7 @@ end
 defimpl String.Chars, for: Todo.List do
   def to_string(todo_list) do
     todo_list.entries
-    |> Stream.map(fn {_id, %{date: date, title: title}} -> "#{date}: #{title}\n" end)
+    |> Enum.map(fn {_id, %{date: date, title: title}} -> "#{date}: #{title}\n" end)
     |> Enum.sort()
     |> Enum.reduce("# To-Do List\n\n", &(&2 <> &1))
   end

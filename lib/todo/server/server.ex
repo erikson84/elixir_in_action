@@ -6,7 +6,9 @@ defmodule Todo.Server do
 
   @impl GenServer
   def init(name) do
-    {:ok, {name, Todo.Database.get(name) || Todo.List.new()}}
+    send(self(), {:real_init, name})
+    #{:ok, {name, Todo.Database.get(name) || Todo.List.new()}}
+    {:ok, nil}
   end
 
   @impl GenServer
@@ -36,6 +38,11 @@ defmodule Todo.Server do
   @impl GenServer
   def handle_call({:retrieve, date}, _from, {name, list}) do
     {:reply, Todo.List.entries(list, date), {name, list}}
+  end
+
+  @impl GenServer
+  def handle_info({:real_init, name}, _state) do
+    {:noreply, {name, Todo.Database.get(name) || Todo.List.new()}}
   end
 
   def start(name) do
