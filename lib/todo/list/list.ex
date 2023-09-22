@@ -1,9 +1,9 @@
-defmodule TodoList do
+defmodule Todo.List do
   @moduledoc """
   A simples todo list.
   """
   defstruct auto_id: 1, entries: %{}
-  @type t :: %TodoList{}
+  @type t :: %Todo.List{}
   @typep entry :: %{date: Date.t(), title: String.t()}
 
   @spec new([entry] | []) :: t()
@@ -12,7 +12,7 @@ defmodule TodoList do
   """
   def new(entries \\ []) do
     entries
-    |> Enum.reduce(%TodoList{}, fn el, acc -> add_entry(acc, el) end)
+    |> Enum.reduce(%Todo.List{}, fn el, acc -> add_entry(acc, el) end)
   end
 
   @spec add_entry(t(), entry()) :: t()
@@ -22,16 +22,16 @@ defmodule TodoList do
 
   ## Examples
 
-      iex> todos = TodoList.new()
-      iex> TodoList.add_entry(todos, %{date: ~D[2022-12-01], title: "Clean the garden"})
-      %TodoList{auto_id: 2,
+      iex> todos = Todo.List.new()
+      iex> Todo.List.add_entry(todos, %{date: ~D[2022-12-01], title: "Clean the garden"})
+      %Todo.List{auto_id: 2,
       entries: %{1 => %{date: ~D[2022-12-01], id: 1, title: "Clean the garden"}}}
 
   """
   def add_entry(todo_list, entry) do
     new_entry = Map.put(entry, :id, todo_list.auto_id)
     new_entries = Map.put(todo_list.entries, todo_list.auto_id, new_entry)
-    %TodoList{auto_id: todo_list.auto_id + 1, entries: new_entries}
+    %Todo.List{auto_id: todo_list.auto_id + 1, entries: new_entries}
   end
 
   @spec entries(t(), Date.t()) :: [entry()]
@@ -40,8 +40,8 @@ defmodule TodoList do
 
   ## Examples
 
-      iex> todos = TodoList.new() |> TodoList.add_entry(%{date: ~D[2022-01-01], title: "Shave"})
-      iex> TodoList.entries(todos, ~D[2022-01-01])
+      iex> todos = Todo.List.new() |> Todo.List.add_entry(%{date: ~D[2022-01-01], title: "Shave"})
+      iex> Todo.List.entries(todos, ~D[2022-01-01])
       [%{date: ~D[2022-01-01], id: 1, title: "Shave"}]
   """
   def entries(todo_list, date) do
@@ -57,9 +57,9 @@ defmodule TodoList do
 
    ## Examples
 
-      iex> todos = TodoList.new() |> TodoList.add_entry(%{date: ~D[2022-12-01], title: "Clean the garden"})
-      iex> TodoList.update_entry(todos, {1, :date}, ~D[2022-12-10])
-      %TodoList{auto_id: 2,
+      iex> todos = Todo.List.new() |> Todo.List.add_entry(%{date: ~D[2022-12-01], title: "Clean the garden"})
+      iex> Todo.List.update_entry(todos, {1, :date}, ~D[2022-12-10])
+      %Todo.List{auto_id: 2,
       entries: %{1 => %{date: ~D[2022-12-10], id: 1, title: "Clean the garden"}}}
 
   """
@@ -79,9 +79,9 @@ defmodule TodoList do
 
   ## Examples
 
-      iex> todos = TodoList.new() |> TodoList.add_entry(%{date: ~D[2022-12-01], title: "Clean the garden"})
-      iex> TodoList.delete_entry(todos, 1)
-      %TodoList{auto_id: 2,
+      iex> todos = Todo.List.new() |> Todo.List.add_entry(%{date: ~D[2022-12-01], title: "Clean the garden"})
+      iex> Todo.List.delete_entry(todos, 1)
+      %Todo.List{auto_id: 2,
       entries: %{}}
   """
   def delete_entry(todo_list, id) do
@@ -90,7 +90,7 @@ defmodule TodoList do
   end
 end
 
-defimpl String.Chars, for: TodoList do
+defimpl String.Chars, for: Todo.List do
   def to_string(todo_list) do
     todo_list.entries
     |> Stream.map(fn {_id, %{date: date, title: title}} -> "#{date}: #{title}\n" end)
@@ -99,30 +99,30 @@ defimpl String.Chars, for: TodoList do
   end
 end
 
-defimpl Collectable, for: TodoList do
+defimpl Collectable, for: Todo.List do
   def into(todo_list) do
     {todo_list, &into_callback/2}
   end
 
   defp into_callback(todo_list, {:cont, entry}) do
-    TodoList.add_entry(todo_list, entry)
+    Todo.List.add_entry(todo_list, entry)
   end
 
   defp into_callback(todo_list, :done), do: todo_list
   defp into_callback(_todo_list, :halt), do: :ok
 end
 
-defmodule TodoList.CsvImporter do
+defmodule Todo.List.CsvImporter do
   @moduledoc """
   Import todo list from CSV file with `Date | Title` format.
   """
-  @spec import!(String.t()) :: TodoList.t()
+  @spec import!(String.t()) :: Todo.List.t()
   def import!(path) do
     path
     |> File.stream!()
     |> Stream.map(&String.trim/1)
     |> Stream.map(&String.split(&1, ","))
     |> Enum.map(fn [date, title] -> %{date: Date.from_iso8601!(date), title: title} end)
-    |> TodoList.new()
+    |> Todo.List.new()
   end
 end
