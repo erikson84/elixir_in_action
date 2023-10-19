@@ -7,7 +7,7 @@ defmodule Todo.Server do
   @impl GenServer
   def init(name) do
     send(self(), {:real_init, name})
-    #{:ok, {name, Todo.Database.get(name) || Todo.List.new()}}
+    # {:ok, {name, Todo.Database.get(name) || Todo.List.new()}}
     {:ok, nil}
   end
 
@@ -45,8 +45,9 @@ defmodule Todo.Server do
     {:noreply, {name, Todo.Database.get(name) || Todo.List.new()}}
   end
 
-  def start(name) do
-    GenServer.start(Todo.Server, name)
+  def start_link(name) do
+    IO.puts("Starting ToDo server...")
+    GenServer.start_link(Todo.Server, name)
   end
 
   def add_entry(server, entry) do

@@ -12,7 +12,7 @@ defmodule Todo.Database do
     workers =
       0..2
       |> Enum.map(fn idx ->
-        {:ok, worker} = Worker.start(@db_folder)
+        {:ok, worker} = Worker.start_link(@db_folder)
         {idx, worker}
       end)
       |> Map.new()
@@ -39,8 +39,9 @@ defmodule Todo.Database do
     {:reply, data, workers}
   end
 
-  def start do
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+  def start_link do
+    IO.puts("Starting ToDo.DB...")
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def store(key, data) do
