@@ -1,31 +1,40 @@
 defmodule Todo.Database do
+  @moduledoc """
+  Persits information from different ToDo lists by employing a limited
+  number of Workers.
+  """
   use GenServer
+  alias Todo.Database.Worker
 
   @db_folder "./persist"
 
   def init(_) do
-    workers = 0..2
-    |> Enum.map(fn idx -> {:ok, worker} = Todo.Database.Worker.start(@db_folder)
-    {idx, worker} end)
-    |> Map.new()
+    workers =
+      0..2
+      |> Enum.map(fn idx ->
+        {:ok, worker} = Worker.start(@db_folder)
+        {idx, worker}
+      end)
+      |> Map.new()
 
     {:ok, workers}
   end
 
   def handle_cast({:store, key, data}, workers) do
     worker = get_worker(key, workers)
-    Todo.Database.Worker.store(worker, key, data)
+    Worker.store(worker, key, data)
 
     {:noreply, workers}
   end
 
   def handle_call({:get, key}, _, workers) do
     worker = get_worker(key, workers)
-    data = Todo.Database.Worker.get(worker, key)
-      case File.read(file_name(key)) do
-        {:ok, contents} -> :erlang.binary_to_term(contents)
-        _ -> nil
-      end
+    data = Worker.get(worker, key)
+
+    case File.read(file_name(key)) do
+      {:ok, contents} -> :erlang.binary_to_term(contents)
+      _ -> nil
+    end
 
     {:reply, data, workers}
   end

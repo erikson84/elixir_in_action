@@ -1,4 +1,7 @@
 defmodule Todo.Database.Worker do
+  @moduledoc """
+  A worker to read and write persistent data, called from the Todo.Database module.
+  """
   use GenServer
 
   def init(db_folder) do

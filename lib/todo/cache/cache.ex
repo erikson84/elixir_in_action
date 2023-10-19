@@ -1,4 +1,8 @@
 defmodule Todo.Cache do
+  @moduledoc """
+  Manages the ToDo list servers by recovering created instances or creating
+  new ones.
+  """
   use GenServer
 
   def init(_) do
@@ -17,8 +21,9 @@ defmodule Todo.Cache do
     end
   end
 
-  def start do
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+  def start_link(_) do
+    IO.puts("Starting ToDo cache...")
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def server_process(todo_list_name) do
