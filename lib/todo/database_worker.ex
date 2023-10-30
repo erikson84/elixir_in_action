@@ -1,4 +1,4 @@
-defmodule Todo.Database.Worker do
+defmodule Todo.DatabaseWorker do
   @moduledoc """
   A worker to read and write persistent data, called from the Todo.Database module.
   """
