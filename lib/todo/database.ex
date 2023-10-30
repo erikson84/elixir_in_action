@@ -4,7 +4,7 @@ defmodule Todo.Database do
   number of Workers.
   """
   use GenServer
-  alias Todo.Database.Worker
+  alias Todo.DatabaseWorker
 
   @db_folder "./persist"
 
@@ -12,7 +12,7 @@ defmodule Todo.Database do
     workers =
       0..2
       |> Enum.map(fn idx ->
-        {:ok, worker} = Worker.start_link(@db_folder)
+        {:ok, worker} = DatabaseWorker.start_link(@db_folder)
         {idx, worker}
       end)
       |> Map.new()
@@ -22,14 +22,14 @@ defmodule Todo.Database do
 
   def handle_cast({:store, key, data}, workers) do
     worker = get_worker(key, workers)
-    Worker.store(worker, key, data)
+    DatabaseWorker.store(worker, key, data)
 
     {:noreply, workers}
   end
 
   def handle_call({:get, key}, _, workers) do
     worker = get_worker(key, workers)
-    data = Worker.get(worker, key)
+    data = DatabaseWorker.get(worker, key)
 
     case File.read(file_name(key)) do
       {:ok, contents} -> :erlang.binary_to_term(contents)
