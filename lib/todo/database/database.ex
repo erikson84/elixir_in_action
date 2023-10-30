@@ -39,7 +39,7 @@ defmodule Todo.Database do
     {:reply, data, workers}
   end
 
-  def start_link do
+  def start_link(_) do
     IO.puts("Starting ToDo.DB...")
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
