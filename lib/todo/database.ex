@@ -3,60 +3,45 @@ defmodule Todo.Database do
   Persits information from different ToDo lists by employing a limited
   number of Workers.
   """
-  use GenServer
   alias Todo.DatabaseWorker
 
+  @pool_size 3
   @db_folder "./persist"
 
-  def init(_) do
-    workers =
-      0..2
-      |> Enum.map(fn idx ->
-        {:ok, worker} = DatabaseWorker.start_link(@db_folder)
-        {idx, worker}
-      end)
-      |> Map.new()
-
-    {:ok, workers}
-  end
-
-  def handle_cast({:store, key, data}, workers) do
-    worker = get_worker(key, workers)
-    DatabaseWorker.store(worker, key, data)
-
-    {:noreply, workers}
-  end
-
-  def handle_call({:get, key}, _, workers) do
-    worker = get_worker(key, workers)
-    data = DatabaseWorker.get(worker, key)
-
-    case File.read(file_name(key)) do
-      {:ok, contents} -> :erlang.binary_to_term(contents)
-      _ -> nil
-    end
-
-    {:reply, data, workers}
-  end
-
-  def start_link(_) do
+  def start_link do
     IO.puts("Starting ToDo.DB...")
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+    File.mkdir_p!(@db_folder)
+
+    children = Enum.map(1..@pool_size, &worker_spec/1)
+    Supervisor.start_link(children, strategy: :one_for_one)
+  end
+
+  defp worker_spec(worker_id) do
+    default_spec = {Todo.DatabaseWorker, {@db_folder, worker_id}}
+    Supervisor.child_spec(default_spec, id: worker_id)
+  end
+
+  def child_spec(_) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, []},
+      type: :supervisor
+    }
   end
 
   def store(key, data) do
-    GenServer.cast(__MODULE__, {:store, key, data})
+    key
+    |> get_worker()
+    |> DatabaseWorker.store(key, data)
   end
 
   def get(key) do
-    GenServer.call(__MODULE__, {:get, key})
+    key
+    |> get_worker()
+    |> DatabaseWorker.get(key)
   end
 
-  defp file_name(key) do
-    Path.join(@db_folder, to_string(key))
-  end
-
-  defp get_worker(key, workers) do
-    Map.get(workers, :erlang.phash2(key, 3))
+  defp get_worker(key) do
+    :erlang.phash2(key, @pool_size) + 1
   end
 end
