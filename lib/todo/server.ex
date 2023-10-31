@@ -2,7 +2,7 @@ defmodule Todo.Server do
   @moduledoc """
   Creates an async Todo list manager.
   """
-  use GenServer
+  use GenServer, restart: :temporary
 
   @impl GenServer
   def init(name) do
@@ -46,8 +46,8 @@ defmodule Todo.Server do
   end
 
   def start_link(name) do
-    IO.puts("Starting ToDo server...")
-    GenServer.start_link(Todo.Server, name)
+    IO.puts("Starting ToDo server #{name}...")
+    GenServer.start_link(Todo.Server, name, name: via_tuple(name))
   end
 
   def add_entry(server, entry) do
@@ -68,5 +68,9 @@ defmodule Todo.Server do
 
   def print(server) do
     GenServer.cast(server, {:print})
+  end
+
+  defp via_tuple(name) do
+    Todo.ProcessRegistry.via_tuple({__MODULE__, name})
   end
 end
