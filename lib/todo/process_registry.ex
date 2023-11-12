@@ -1,46 +1,42 @@
 defmodule Todo.ProcessRegistry do
-  use GenServer
-
   @moduledoc """
   A simple registry to recover worker information for the database module.
   """
-  @impl GenServer
-  def init(_) do
-    Process.flag(:trap_exit, true)
-    {:ok, %{}}
+  def start_link do
+    {:ok,
+     spawn(fn ->
+       Process.flag(:trap_exit, true)
+       Process.register(self(), __MODULE__)
+       :ets.new(__MODULE__, [:named_table, :public, write_concurrency: true])
+       loop_reg()
+     end)}
   end
 
-  @impl GenServer
-  def handle_call({:register, key}, {pid, _}, state) do
-    case Map.fetch(state, key) do
-      {:ok, _} ->
-        {:reply, :error, state}
+  defp loop_reg do
+    receive do
+      {:EXIT, pid, _reason} ->
+        :ets.match_delete(__MODULE__, {:_, pid})
+        loop_reg()
 
-      :error ->
-        Process.link(pid)
-        {:reply, :ok, Map.put(state, key, pid)}
+      {:exit} ->
+        :exit
     end
   end
 
-  def handle_call({:whereis, key}, _from, state) do
-    {:reply, state[key], state}
-  end
-
-  @impl GenServer
-  def handle_info({:EXIT, pid, _reason}, state) do
-    {key, _val} = Enum.find(state, fn {_key, val} -> val == pid end)
-    {:noreply, Map.delete(state, key)}
-  end
-
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
-  end
-
   def register(key) do
-    GenServer.call(__MODULE__, {:register, key})
+    Process.link(Process.whereis(__MODULE__))
+
+    if :ets.insert_new(__MODULE__, {key, self()}) do
+      :ok
+    else
+      :error
+    end
   end
 
   def whereis(key) do
-    GenServer.call(__MODULE__, {:whereis, key})
+    case :ets.lookup(__MODULE__, key) do
+      [{^key, val}] -> val
+      [] -> nil
+    end
   end
 end
