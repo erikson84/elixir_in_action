@@ -23,7 +23,7 @@ defmodule Todo.ProcessRegistry do
     end
   end
 
-  def register(key) do
+  def register_name(key) do
     Process.link(Process.whereis(__MODULE__))
 
     if :ets.insert_new(__MODULE__, {key, self()}) do
@@ -33,10 +33,39 @@ defmodule Todo.ProcessRegistry do
     end
   end
 
-  def whereis(key) do
+  def unregister_name(key) do
+    Process.unlink(Process.whereis(__MODULE__))
+
+    if :ets.match_delete(__MODULE__, {key, :_}) do
+      :ok
+    else
+      :error
+    end
+  end
+
+  def whereis_name(key) do
     case :ets.lookup(__MODULE__, key) do
       [{^key, val}] -> val
       [] -> nil
     end
+  end
+
+  def send({_registry, key}, msg) do
+    case whereis_name(key) do
+      pid when is_pid(pid) -> Kernel.send(pid, msg)
+      _ -> :error
+    end
+  end
+
+  def via_tuple(key) do
+    {:via, __MODULE__, {__MODULE__, key}}
+  end
+
+  def child_spec(_) do
+    Supervisor.child_spec(
+      __MODULE__,
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, []}
+    )
   end
 end
