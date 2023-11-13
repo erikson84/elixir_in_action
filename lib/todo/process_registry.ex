@@ -23,26 +23,25 @@ defmodule Todo.ProcessRegistry do
     end
   end
 
-  def register_name(key) do
+  def register_name(key, _value) do
     Process.link(Process.whereis(__MODULE__))
 
     if :ets.insert_new(__MODULE__, {key, self()}) do
-      :ok
+      :yes
     else
-      :error
+      :no
     end
   end
 
   def unregister_name(key) do
     Process.unlink(Process.whereis(__MODULE__))
     :ets.match_delete(__MODULE__, {key, :_})
-    :ok
   end
 
   def whereis_name(key) do
     case :ets.lookup(__MODULE__, key) do
       [{^key, val}] -> val
-      [] -> nil
+      [] -> :undefined
     end
   end
 
