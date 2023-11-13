@@ -24,3 +24,7 @@ todolist-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Database artifacts
+/persist/
+
