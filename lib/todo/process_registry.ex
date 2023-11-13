@@ -46,7 +46,7 @@ defmodule Todo.ProcessRegistry do
     end
   end
 
-  def send({_registry, key}, msg) do
+  def send(key, msg) do
     case whereis_name(key) do
       pid when is_pid(pid) -> Kernel.send(pid, msg)
       _ -> :error
@@ -54,7 +54,7 @@ defmodule Todo.ProcessRegistry do
   end
 
   def via_tuple(key) do
-    {:via, __MODULE__, {__MODULE__, key}}
+    {:via, __MODULE__, key}
   end
 
   def child_spec(_) do
