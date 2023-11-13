@@ -35,12 +35,8 @@ defmodule Todo.ProcessRegistry do
 
   def unregister_name(key) do
     Process.unlink(Process.whereis(__MODULE__))
-
-    if :ets.match_delete(__MODULE__, {key, :_}) do
-      :ok
-    else
-      :error
-    end
+    :ets.match_delete(__MODULE__, {key, :_})
+    :ok
   end
 
   def whereis_name(key) do
@@ -62,10 +58,9 @@ defmodule Todo.ProcessRegistry do
   end
 
   def child_spec(_) do
-    Supervisor.child_spec(
-      __MODULE__,
+    %{
       id: __MODULE__,
       start: {__MODULE__, :start_link, []}
-    )
+    }
   end
 end
