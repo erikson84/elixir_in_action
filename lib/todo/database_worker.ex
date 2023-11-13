@@ -28,7 +28,6 @@ defmodule Todo.DatabaseWorker do
   end
 
   def start_link(db_folder) do
-    # IO.puts("Starting DB worker #{worker_id}...")
     GenServer.start_link(__MODULE__, db_folder)
   end
 
@@ -43,8 +42,4 @@ defmodule Todo.DatabaseWorker do
   defp file_name(db_folder, key) do
     Path.join(db_folder, to_string(key))
   end
-
-  #  defp via_tuple(worker_id) do
-  #  Todo.ProcessRegistry.via_tuple({__MODULE__, worker_id})
-  # end
 end
