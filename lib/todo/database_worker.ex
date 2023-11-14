@@ -5,8 +5,12 @@ defmodule Todo.DatabaseWorker do
   use GenServer
 
   def init(db_folder) do
-    File.mkdir_p!(db_folder)
-    {:ok, db_folder}
+    node_folder =
+      get_node()
+      |> then(&Path.join(db_folder, &1))
+
+    File.mkdir_p!(node_folder)
+    {:ok, node_folder}
   end
 
   def handle_cast({:store, key, data}, db_folder) do
@@ -41,5 +45,11 @@ defmodule Todo.DatabaseWorker do
 
   defp file_name(db_folder, key) do
     Path.join(db_folder, to_string(key))
+  end
+
+  defp get_node do
+    Node.self()
+    |> Atom.to_string()
+    |> String.replace(~r/@.*/, "")
   end
 end
