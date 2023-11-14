@@ -1,6 +1,9 @@
 defmodule Todo.Metrics do
   use Task
 
+  @moduledoc """
+  Implements a simple system telemetry which pings back every 10 seconds.
+  """
   def start_link(_arg), do: Task.start_link(&loop/0)
 
   defp loop do

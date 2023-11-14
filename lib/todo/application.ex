@@ -1,4 +1,7 @@
 defmodule Todo.Application do
+  @moduledoc """
+  Initializes the Todo List application and the necessary processes.
+  """
   use Application
 
   def start(_, _) do

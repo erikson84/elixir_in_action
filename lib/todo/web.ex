@@ -1,4 +1,7 @@
 defmodule Todo.Web do
+  @moduledoc """
+  Web API to add and retrieve entries from a Todo List.
+  """
   use Plug.Router
 
   plug(:match)
