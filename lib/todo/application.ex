@@ -8,7 +8,6 @@ defmodule Todo.Application do
     children =
       [
         Todo.Metrics,
-        Todo.ProcessRegistry,
         Todo.Database,
         Todo.Cache,
         Todo.Web
