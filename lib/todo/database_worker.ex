@@ -5,6 +5,8 @@ defmodule Todo.DatabaseWorker do
   use GenServer
 
   def init(db_folder) do
+    IO.puts("Starting database worker...")
+
     node_folder =
       get_node()
       |> then(&Path.join(db_folder, &1))
